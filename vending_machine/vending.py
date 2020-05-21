@@ -45,41 +45,14 @@ class VendingMachine():
         for option, (name, price) in self.inventory.items():
             print("{0:<5}{1:20}£{2}".format(option, name, price))
 
-    def insert_coins(self):
-        end_token = 'end'
-        collection = [0] * len(self.denominations)
-        readable = ["£{0:.2f}".format(i/100) for i in self.denominations]
-        readable.append(end_token)
-        options = dict(zip(range(len(readable)), readable))
-        for choice, amount in options.items():
-            print("{0:}: {1:}".format(choice, amount))
-        while True:
-            try:
-                choice = int(input())
-                assert choice in range(len(options))
-                if options[choice] == end_token:
-                    for i, (k, v) in enumerate(self.collected.items()):
-                        self.collected[k] = v + collection[i]
-                    break
-                else:
-                    collection[choice] += 1
-            except (AssertionError, ValueError):
-                print("not an option")
-                continue
-
-    # def terminate(self):
-    #     number_of_coins = sum(self.collected.values())
-    #     if number_of_coins > 0:
-    #         text = 'coins'
-    #         if number_of_coins == 1:
-    #             text = 'coin'
-    #         print("Returning:", number_of_coins, text)
-    #         for k, v in self.collected.items():
-    #             for j in range(v):
-    #                 print("> £{:.2f}".format(k/100))
-    #         self.collected = self.reset_collection()
-    #     else:
-    #         print("No coins deposited")
+    def insert_coin(self, selection):
+        response = ""
+        if selection in range(len(self.denominations)):
+            self.collected[self.denominations[selection]] += 1
+            response += "Deposited: {0:.2f}".format(self.denominations[selection]/100)
+        else:
+            response += "{} is not a valid option".format(selection)
+        return response
 
     def terminate(self):
         response = ""
@@ -88,14 +61,14 @@ class VendingMachine():
             text = 'coins'
             if number_of_coins == 1:
                 text = 'coin'
-            response += "Returning: {0} {1}\n".format(number_of_coins, text)
-            for k, v in self.collected.items():
-                for j in range(v):
-                    response += ("> £{:.2f}".format(k/100))
+            response += "Returning {0} {1} ".format(number_of_coins, text)
+            coins = ["{:.2f}".format(k/100) for k, v in self.collected.items() for j in range(v)]
+            data = dict(zip(range(len(coins)),coins))
             self.collected = self.reset_collection()
         else:
             response += "No coins deposited"
-        return response
+            data = None
+        return response, data
 
     def calculate_change(self, change):
         coin_count = [0] * (change + 1)

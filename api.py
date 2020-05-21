@@ -1,9 +1,10 @@
 from vending_machine.vending import VendingMachine
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
+import json
+
 app = Flask(__name__)
 api = Api(app)
-
 
 class Session():
     '''Session class manages the state of the interactive elements in the session'''
@@ -11,11 +12,11 @@ class Session():
         self.vm = None
 
 class Build(Resource):
-    # def get(self, denominations):
     def get(self):
-        standard = [50, 50, 50, 50, 50, 20, 10, 5]
-        session.vm = VendingMachine(standard)
-        out = {i : {"denomination" : j, "amount" : k} for i, (j, k) in enumerate(session.vm.cash.items())}
+        args = request.args
+        # build?param=[50, 50, 50, 50, 50, 20, 10, 5]
+        session.vm = VendingMachine(json.loads(args['param']))
+        out = {i : {"denomination" : "{0:.2f}".format(j/100), "amount" : k} for i, (j, k) in enumerate(session.vm.cash.items())}
         return jsonify({"data" : {"cash" : out}})
 
 class Inventory(Resource):
@@ -35,16 +36,18 @@ class Collected(Resource):
 
 class Terminate(Resource):
     def get(self):
-        out = session.vm.terminate()
-        return jsonify({"data" : {"message" : out}})
+        out, data = session.vm.terminate()
+        return jsonify({"data" : {"returned" : {"coins": data}}})
 
 class Add(Resource):
-    def get(self):
-        return 0
+    def get(self, option):
+        out = session.vm.insert_coin(option)
+        return jsonify({"data" : {"added" : out}})
 
-class Selection(Resource):
-    def get(self):
-        return 0
+class Select(Resource):
+    def get(self, option):
+        out = session.vm.select(option)
+        return jsonify({"data" : {"added" : out}})
 
 # api.add_resource(Build, '/build/<denominations>')
 api.add_resource(Build, '/build')
@@ -52,7 +55,8 @@ api.add_resource(Inventory, '/inventory')
 api.add_resource(Cash, '/cash')
 api.add_resource(Collected, '/collected')
 api.add_resource(Terminate, '/terminate')
-
+api.add_resource(Add, '/add/<int:option>')
+api.add_resource(Select, '/select/<int:option>')
 
 if __name__ == '__main__':
     session = Session()
