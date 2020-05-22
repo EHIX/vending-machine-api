@@ -7,6 +7,7 @@ class VendingMachine():
             assert isinstance(coin_count, list)
         except AssertionError:
             print("Warning: input invalid, continuing without change")
+            # Missing values are assigned as zero
             coin_count = [0] * 8
         try:
             assert len(coin_count) == len(self.denominations)
@@ -26,19 +27,26 @@ class VendingMachine():
                   3:('Orangeade 500ml', 1.65)}
 
     def reset_collection(self):
+        """
+        Reset values within self.collected, i.e. a transaction.
+        Returns: (dict): each denomination-key with a zero-value.
+        """
         return dict(zip(self.denominations, [0] * len(self.denominations)))
 
-    def sum_cash(self, v = 0):
+    def sum_cash(self):
+        """Returns formatted sum of coins deposited within the vending machine."""
         return ("{:.2f}".format(sum([(k * v) for k, v in self.cash.items()]) / 100))
 
-    def sum_collected(self, v = 0):
+    def sum_collected(self):
+        """Returns formatted sum of coins collected during a transaction."""
         return ("{:.2f}".format(sum([(k * v) for k, v in self.collected.items()]) / 100))
 
-    def print_inventory(self):
-        for option, (name, price) in self.inventory.items():
-            print("{0:<5}{1:20}£{2}".format(option, name, price))
-
     def insert_coin(self, selection):
+        """
+        Increases number of coins within self.collected.
+        Parameter: selection (int): selected denomination being added.
+        Returns: formatted response including a record of the coins being entered.
+        """
         response = ""
         data = "invalid"
         if selection in range(len(self.denominations)):
@@ -50,6 +58,10 @@ class VendingMachine():
         return {response : data}
 
     def terminate(self):
+        """
+        Cancels a transaction, returning coins entered.
+        Returns: formatted response including a record of the coins being returned.
+        """
         response = ""
         number_of_coins = sum(self.collected.values())
         if number_of_coins > 0:
@@ -63,6 +75,11 @@ class VendingMachine():
         return {response: {"coins": data}}
 
     def calculate_change(self, change):
+        """
+        Calculates the correct change to be dispenced after a successful transaction.
+        Parameter: change (int): amount of change to return (in pence).
+        Returns: list: optimum number and denominations of coins to return.
+        """
         coin_count = [0] * (change + 1)
         coins_used = [0] * (change + 1)
         for i in range(change + 1):
@@ -84,10 +101,18 @@ class VendingMachine():
         return optimum_coins
 
     def increase_total(self):
+        """
+        Increment total number of coins within self.cash.
+        """
         for k, v in self.collected.items():
             self.cash[k] += v
 
     def decrease_total(self, coins, report=True):
+        """
+        Decrement number of coins within self.cash.
+        Parameter: coins (list): coins to be removed.
+        Returns: dict: formatted coins being removed.
+        """
         data = []
         for c in coins:
             self.cash[c] -= 1
@@ -96,6 +121,10 @@ class VendingMachine():
             return dict(zip(range(len(data)), data))
 
     def can_allocate(self, coins):
+        """
+        Check to see whether the combination of coins can be returned as change.
+        Parameter: coins (list): coins to be removed.
+        """
         flag = True
         count = Counter(coins)
         missing_coins = [k for k in count.keys() if self.cash[k] < count[k]]
@@ -104,6 +133,12 @@ class VendingMachine():
         return flag
 
     def select(self, option):
+        """
+        Facilitates selection process. Can succeed, dispensing item and any change.
+        Can fail, if underfunded, if cannot make change, or if selection is invalid.
+        Parameter: option (int): selected item being requested, as a dict key.
+        Returns: formatted response documenting events.
+        """
         response = ''
         data = {}
         transact = True

@@ -229,7 +229,7 @@ localhost:8080/add/6
 
 GET /select/int:option
 
-If the appropriate amount has been deposited, the selected item and any change is returned. If change cannot be made, the transaction is cancelled, and any deposited coins are returned. The option parameter corresponds with one of the items within the vending machine inventory. Currently, only one transaction can be handled, meaning that coins must be redeposited to make subsequent purchases.
+If the correct amount has been deposited, the selected item and any change is returned. If change cannot be made, the transaction is cancelled, and any deposited coins are returned. The option parameter corresponds with one of the items within the vending machine inventory. Currently, only one transaction can be handled, meaning that coins must be redeposited to make subsequent purchases.
 
 **Example**
 
