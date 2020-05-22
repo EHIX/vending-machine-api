@@ -1,4 +1,4 @@
 class Session():
-    '''Session class manages the state of the interactive elements in the session'''
+    '''Session class manages the state of the vending machine'''
     def __init__(self):
         self.vm = None
