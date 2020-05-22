@@ -21,41 +21,41 @@ class Build(Resource):
         args = request.args
         session.vm = VendingMachine(json.loads(args['param']))
         response = {i : {"unit" : "{0:.2f}".format(j/100), "amount" : k} for i, (j, k) in enumerate(session.vm.cash.items())}
-        return jsonify({"data" : {"cash" : response}, "message" : "vending machine successfully built"}, 200)
+        return jsonify({"data" : {"cash" : response}, "message" : "vending machine successfully built"})
 
 class Inventory(Resource):
     def get(self):
         response = {i : {"name" : j.lower(), "price" : k} for i, (j, k) in session.vm.inventory.items()}
-        return jsonify({"data" : {"inventory" : response}, "message" : "inventory items"}, 200)
+        return jsonify({"data" : {"inventory" : response}, "message" : "inventory items"})
 
 class Cash(Resource):
     def get(self, option):
         response = {'total' : session.vm.sum_cash()}
         if option:
             response = {i : {'unit': "{0:.2f}".format(j/100), 'amount': k} for i, (j, k) in enumerate(session.vm.cash.items())}
-        return jsonify({"data" : {"cash" : response}, "message" : "cash available to vending machine"}, 200)
+        return jsonify({"data" : {"cash" : response}, "message" : "cash available to vending machine"})
 
 class Collected(Resource):
     def get(self, option):
         response = {'total' : session.vm.sum_collected()}
         if option:
             response = {i : {'unit': "{0:.2f}".format(j/100), 'amount': k} for i, (j, k) in enumerate(session.vm.collected.items())}
-        return jsonify({"data" : {"collected" : response}, "message" : "cash collected during transaction"}, 200)
+        return jsonify({"data" : {"collected" : response}, "message" : "cash collected during transaction"})
 
 class Terminate(Resource):
     def get(self):
         response = session.vm.terminate()
-        return jsonify({"data" : {"terminate" : response}, "message" : "transation terminated"}, 200)
+        return jsonify({"data" : {"terminate" : response}, "message" : "transaction terminated"})
 
 class Add(Resource):
     def get(self, option):
         response = session.vm.insert_coin(option)
-        return jsonify({"data" : {"add" : response}, "message" : "add coin to vending machine"}, 200)
+        return jsonify({"data" : {"add" : response}, "message" : "add coin to vending machine"})
 
 class Select(Resource):
     def get(self, option):
         response = session.vm.select(option)
-        return jsonify({"data" : {"select" : response}, "message" : "select item from vending machine"}, 200)
+        return jsonify({"data" : {"select" : response}, "message" : "select item from vending machine"})
 
 api.add_resource(Build, '/build')
 api.add_resource(Inventory, '/inventory')

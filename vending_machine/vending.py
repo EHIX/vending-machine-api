@@ -129,7 +129,7 @@ class VendingMachine():
                     else:
                         # Cannot dispense correct change, cancelling transation
                         self.decrease_total([k for (k, v) in self.collected.items() for j in range(v)], False)
-                        response += "transation"
+                        response += "transaction"
                         data = self.terminate()
                         transact = False
                 if transact:
