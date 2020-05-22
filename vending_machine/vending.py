@@ -6,40 +6,33 @@ class VendingMachine():
         try:
             assert isinstance(coin_count, list)
         except AssertionError:
-            print("Warning: input invalid")
-            print("Continuing without change\n")
+            print("Warning: input invalid, continuing without change")
             coin_count = [0] * 8
         try:
             assert len(coin_count) == len(self.denominations)
         except AssertionError:
-            print("Warning: number of denominations inserted incorrect or missing entries..")
+            print("Warning: number of denominations inserted incorrect or missing entries")
             if len(coin_count) < len(self.denominations):
                 for i in range(len(self.denominations)-len(coin_count)):
                     coin_count.append(0)
-                print("Missing entries have been noted\n")
+                print("Missing entries have been noted")
             elif len(coin_count) > len(self.denominations):
-                print("Surplus entries have been ignored\n")
+                print("Surplus entries have been ignored")
         self.cash = dict(zip(self.denominations, coin_count))
         self.collected = self.reset_collection()
-        self.inventory = {1:('Cola 330ml', 0.95),
-                  2:('Lemonade 330ml', 0.95),
-                  3:('Water 500ml', 1.15),
-                  4:('Orangeade 500ml', 1.65)}
+        self.inventory = {0:('Cola 330ml', 0.95),
+                  1:('Lemonade 330ml', 0.95),
+                  2:('Water 500ml', 1.15),
+                  3:('Orangeade 500ml', 1.65)}
 
     def reset_collection(self):
         return dict(zip(self.denominations, [0] * len(self.denominations)))
 
-    def print_total(self, v = 0):
-        if v > 0:
-            for denomination, amount in self.cash.items():
-                print("£{0:.2f}{1:10}".format(denomination / 100, amount))
-        print("£{:.2f}".format(sum([(k * v) for k, v in self.cash.items()]) / 100))
+    def sum_cash(self, v = 0):
+        return ("{:.2f}".format(sum([(k * v) for k, v in self.cash.items()]) / 100))
 
-    def print_collected(self, v = 0):
-        if v > 0:
-            for denomination, amount in self.collected.items():
-                print("£{0:.2f}{1:10}".format(denomination / 100, amount))
-        print("£{:.2f}".format(sum([(k * v) for k, v in self.collected.items()]) / 100))
+    def sum_collected(self, v = 0):
+        return ("{:.2f}".format(sum([(k * v) for k, v in self.collected.items()]) / 100))
 
     def print_inventory(self):
         for option, (name, price) in self.inventory.items():
@@ -47,28 +40,27 @@ class VendingMachine():
 
     def insert_coin(self, selection):
         response = ""
+        data = "invalid"
         if selection in range(len(self.denominations)):
             self.collected[self.denominations[selection]] += 1
-            response += "Deposited: {0:.2f}".format(self.denominations[selection]/100)
+            response = "success"
+            data = "{0:.2f}".format(self.denominations[selection]/100)
         else:
-            response += "{} is not a valid option".format(selection)
-        return response
+            response += "error"
+        return {response : data}
 
     def terminate(self):
         response = ""
         number_of_coins = sum(self.collected.values())
         if number_of_coins > 0:
-            text = 'coins'
-            if number_of_coins == 1:
-                text = 'coin'
-            response += "Returning {0} {1} ".format(number_of_coins, text)
+            response += "refund"
             coins = ["{:.2f}".format(k/100) for k, v in self.collected.items() for j in range(v)]
-            data = dict(zip(range(len(coins)),coins))
+            data = dict(zip(range(len(coins)), coins))
             self.collected = self.reset_collection()
         else:
-            response += "No coins deposited"
+            response += "error"
             data = None
-        return response, data
+        return {response: {"coins": data}}
 
     def calculate_change(self, change):
         coin_count = [0] * (change + 1)
@@ -96,48 +88,56 @@ class VendingMachine():
             self.cash[k] += v
 
     def decrease_total(self, coins, report=True):
+        data = []
         for c in coins:
             self.cash[c] -= 1
-            if report:
-                print("> £{:.2f}".format(c/100))
+            data.append("{:.2f}".format(c/100))
+        if data:
+            return dict(zip(range(len(data)), data))
 
     def can_allocate(self, coins):
         flag = True
         count = Counter(coins)
         missing_coins = [k for k in count.keys() if self.cash[k] < count[k]]
         if missing_coins:
-        #         print("missing", missing_coins)
             flag = False
         return flag
 
     def select(self, option):
-        try:
-            assert option in self.inventory.keys()
+        response = ''
+        data = {}
+        transact = True
+        if option in self.inventory.keys():
             item_name, price = self.inventory[option]
             collected_total = sum([(k * v) for k, v in self.collected.items()]) / 100
             if collected_total < price:
-                print("Insufficent funds")
-                print("You deposited £{0:.2f} item costs £{1:.2f}".format(collected_total, price))
+                transact = False
+                response += "underfunded"
+                data = None
+                # print("Deposited £{0:.2f}, item costs £{1:.2f}".format(collected_total, price))
             else:
-                # Increase cash; inserted coins can be used when making change.
+                # Increase amounts in cash, inserted coins can be used when making change
                 self.increase_total()
                 change_amount = int(round(collected_total - price, 2) * 100)
                 if change_amount:
-                    # Calulate combination of coins required.
+                    # Calculate combination of coins required
                     coins_used = self.calculate_change(change_amount)
-                    # Check whether coins can be dispensed.
+                    # Check whether combination of coins can be dispensed
                     if self.can_allocate(coins_used):
-                        text = 'coins'
-                        if len(coins_used) == 1:
-                            text = 'coin'
-                        print("Dispensing change:", len(coins_used), text)
-                        self.decrease_total(coins_used)
+                        change = self.decrease_total(coins_used)
+                        data.update({"change": change})
                     else:
-                        print('Warning: cannot dispense correct change\nCancelling transation')
+                        # Cannot dispense correct change, cancelling transation
                         self.decrease_total([k for (k, v) in self.collected.items() for j in range(v)], False)
-                        self.terminate()
-                        return
-                self.collected = self.reset_collection()
-                print("Vending item:", item_name)
-        except (AssertionError):
-            print("Not an option")
+                        response += "transation"
+                        data = self.terminate()
+                        transact = False
+                if transact:
+                    # Reset collected amount of cash, dispense item
+                    self.collected = self.reset_collection()
+                    data.update({"item" : item_name.lower()})
+                    response += "transation"
+        else:
+            transact = False
+            response += "invalid"
+        return {"success" if transact else "error" : {response : data}}
