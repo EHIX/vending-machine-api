@@ -1,5 +1,9 @@
 # Vending Machine API
 
+Exemplifying my introduction to API development, this project is the result of a timed coding exercise for a multinational technology corporation; which enabled me to advance to the final round of interviews. Although vague, the task specification has been omitted on grounds of goodwill.
+
+The solution implemented to allocate the appropriate change is optimal, but in its current state will not backtrack to consider alternatives, should the optimal combination of coins not be available to the machine.
+
 ## Requirements
 Use [pip](https://pip.pypa.io/en/stable/) or [conda](https://docs.conda.io/en/latest/) to install the requirements to run.
 
