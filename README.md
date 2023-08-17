@@ -25,7 +25,7 @@ python run.py
 
 ```
 
-Navigate to http://localhost:8080/
+Navigate to `http://localhost:8080/`
 
 All responses have the form:
 
